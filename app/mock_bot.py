@@ -48,7 +48,7 @@ class MockBot(Bot):
                 message_id=self.message_manager.last_message_id,
                 date=datetime.datetime.now(),
                 chat=Chat(
-                    id=1,
+                    id=chat_id,
                     type='private'
                 ),
                 text=text,
@@ -58,7 +58,7 @@ class MockBot(Bot):
                 message_id=self.message_manager.last_message_id,
                 date=datetime.datetime.now(),
                 chat=Chat(
-                    id=1,
+                    id=chat_id,
                     type='private'
                 ),
                 text=text,
@@ -67,6 +67,63 @@ class MockBot(Bot):
             )
         self.message_manager.sent_messages.append(message)
         return message
+
+    async def edit_message_text(
+        self,
+        text: str,
+        business_connection_id: Optional[str] = None,
+        chat_id: Optional[Union[int, str]] = None,
+        message_id: Optional[int] = None,
+        inline_message_id: Optional[str] = None,
+        parse_mode: Optional[Union[str, Default]] = Default("parse_mode"),
+        entities: Optional[list[MessageEntity]] = None,
+        link_preview_options: Optional[Union[LinkPreviewOptions, Default]] = Default(
+            "link_preview"
+        ),
+        reply_markup: Optional[InlineKeyboardMarkup] = None,
+        disable_web_page_preview: Optional[Union[bool, Default]] = Default(
+            "link_preview_is_disabled"
+        ),
+        request_timeout: Optional[int] = None,
+    ) -> Union[Message, bool]:
+        """
+        Edit the text of a previously sent message.
+        """
+        # Check if message_id is provided and find the message in sent_messages
+        if message_id is None:
+            raise ValueError("message_id must be specified to edit a message.")
+
+        # Locate the original message in the sent messages list
+        original_message_index = next(
+            (
+                index
+                for index, msg in enumerate(self.message_manager.sent_messages)
+                if msg.message_id == message_id
+            ),
+            None,
+        )
+
+        if original_message_index is None:
+            raise ValueError(f"Message with message_id {message_id} not found.")
+
+        # Retrieve the original message
+        original_message = self.message_manager.sent_messages[original_message_index]
+
+        # Create a new message with updated text and other optional parameters
+        updated_message = Message(
+            message_id=original_message.message_id,
+            date=original_message.date,  # Preserve original date
+            chat=original_message.chat,  # Preserve original chat
+            text=text,  # Update the text
+            reply_markup=reply_markup or original_message.reply_markup,
+            entities=entities or original_message.entities,
+        )
+
+        # Replace the original message in the list with the updated message
+        self.message_manager.sent_messages[original_message_index] = updated_message
+
+        # Return the updated message
+        return updated_message
 
     @property
     def id(self):

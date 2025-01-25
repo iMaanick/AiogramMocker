@@ -13,13 +13,14 @@ from aiogram_dialog import (
     Window,
     setup_dialogs,
 )
-from aiogram_dialog.test_tools import BotClient, MockMessageManager
+from aiogram_dialog.test_tools import BotClient
 from aiogram_dialog.test_tools.keyboard import InlineButtonTextLocator
 from aiogram_dialog.test_tools.memory_storage import JsonMemoryStorage
 from aiogram_dialog.widgets.kbd import Button
 from aiogram_dialog.widgets.text import Const, Format
 
 from app.mock_bot import MockBot
+from app.mock_message_manager import MockMessageManager
 
 
 class MainSG(StatesGroup):
@@ -104,5 +105,3 @@ async def test_click():
     assert second_message.text == "Next Username"
     assert second_message.reply_markup.inline_keyboard
     user_getter.assert_called_once()
-    for msg in message_manager.sent_messages:
-        print(msg.text, msg.message_id)

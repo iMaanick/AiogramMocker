@@ -3,12 +3,13 @@ import pprint
 
 import pytest
 from aiogram import Dispatcher
-from aiogram_dialog.test_tools import MockMessageManager, BotClient
+from aiogram_dialog.test_tools import BotClient
 from aiogram_dialog.test_tools.keyboard import InlineButtonTextLocator
 from aiogram_dialog.test_tools.memory_storage import JsonMemoryStorage
 
 from app.mock_bot import MockBot
-from tests.test_groosha.handlers import common, ordering_food, ordering_drinks
+from app.mock_message_manager import MockMessageManager
+from tests.test_groosha.handlers import common, ordering_food, test_button
 
 
 @pytest.mark.asyncio
@@ -16,10 +17,10 @@ async def test_click():
     dp = Dispatcher(
         storage=JsonMemoryStorage(),
     )
-    dp.include_routers(common.router, ordering_food.router, ordering_drinks.router)
+    dp.include_routers(common.router, ordering_food.router, test_button.router)
 
     message_manager = MockMessageManager()
-    client = BotClient(dp, bot=MockBot(message_manager))
+    client = BotClient(dp, bot=MockBot(message_manager), user_id=5, chat_id=5)
     # setup_dialogs(dp, message_manager=message_manager)
 
     await client.send("/start")
@@ -47,13 +48,22 @@ async def test_click():
     await client.send("/drinks")
     await asyncio.sleep(0.03)
     fifth_message = message_manager.last_message()
-    pprint.pprint(fifth_message.reply_markup)
     fifth_message_text = f"Сообщение с кнопкой"
     assert fifth_message.text == fifth_message_text
 
-    callback_id = await client.click(
+    await client.click(
         fifth_message, InlineButtonTextLocator("Кнопка"),
     )
     sixth_message = message_manager.last_message()
     sixth_message_text = "Кнопка работает"
     assert sixth_message.text == sixth_message_text
+
+    assert message_manager.last_message_id == 6
+
+    await client.click(
+        sixth_message, InlineButtonTextLocator("Изменить"),
+    )
+    sixth_message = message_manager.last_message()
+    sixth_message_text = "Измененный текст"
+    assert sixth_message.text == sixth_message_text
+    assert sixth_message.message_id == 6
