@@ -1,17 +1,11 @@
-import datetime
-import pprint
-from typing import Any, Optional, Union
+from typing import Any
 from unittest.mock import Mock
 
 import pytest
-from aiogram import Dispatcher, Bot
-from aiogram.client.default import Default
+from aiogram import Dispatcher
 from aiogram.filters import CommandStart
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.methods import TelegramMethod, AnswerCallbackQuery
-from aiogram.types import Message, ReplyParameters, MessageEntity, LinkPreviewOptions, InlineKeyboardMarkup, \
-    ReplyKeyboardRemove, ForceReply, ReplyKeyboardMarkup, Chat
-
+from aiogram.types import Message
 from aiogram_dialog import (
     Dialog,
     DialogManager,
@@ -25,6 +19,8 @@ from aiogram_dialog.test_tools.memory_storage import JsonMemoryStorage
 from aiogram_dialog.widgets.kbd import Button
 from aiogram_dialog.widgets.text import Const, Format
 
+from app.mock_bot import MockBot
+
 
 class MainSG(StatesGroup):
     start = State()
@@ -33,7 +29,7 @@ class MainSG(StatesGroup):
 
 async def on_click(event, button, manager: DialogManager) -> None:
     manager.middleware_data["usecase"]()
-    await manager.event.bot.send_message(chat_id=1, text="12312312")
+    await manager.event.bot.send_message(chat_id=1, text="BOT SEND")
     await manager.next()
 
 
@@ -66,69 +62,6 @@ async def start(message: Message, dialog_manager: DialogManager):
     await dialog_manager.start(MainSG.start, mode=StartMode.RESET_STACK)
 
 
-class MyBot(Bot):
-    def __init__(self, message_manager: MockMessageManager):
-        self.message_manager = message_manager
-        pass  # do not call super, so it is invalid bot, used only as a stub
-
-    async def send_message(
-            self,
-            chat_id: Union[int, str],
-            text: str,
-            business_connection_id: Optional[str] = None,
-            message_thread_id: Optional[int] = None,
-            parse_mode: Optional[Union[str, Default]] = Default("parse_mode"),
-            entities: Optional[list[MessageEntity]] = None,
-            link_preview_options: Optional[Union[LinkPreviewOptions, Default]] = Default(
-                "link_preview"
-            ),
-            disable_notification: Optional[bool] = None,
-            protect_content: Optional[Union[bool, Default]] = Default("protect_content"),
-            allow_paid_broadcast: Optional[bool] = None,
-            message_effect_id: Optional[str] = None,
-            reply_parameters: Optional[ReplyParameters] = None,
-            reply_markup: Optional[
-                Union[InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply]
-            ] = None,
-            allow_sending_without_reply: Optional[bool] = None,
-            disable_web_page_preview: Optional[Union[bool, Default]] = Default(
-                "link_preview_is_disabled"
-            ),
-            reply_to_message_id: Optional[int] = None,
-            request_timeout: Optional[int] = None,
-    ) -> Message:
-        message = Message(
-            message_id=1,
-            date=datetime.datetime.now(),
-            chat=Chat(
-                id=1,
-                type='private'
-            ),
-            text=text
-        )
-        self.message_manager.sent_messages.append(message)
-        return message
-
-    @property
-    def id(self):
-        return 1
-
-    async def __call__(
-            self, method: TelegramMethod[Any],
-            request_timeout: Optional[int] = None,
-    ) -> Any:
-        del request_timeout  # unused
-        if isinstance(method, AnswerCallbackQuery):
-            return True
-        raise RuntimeError("Fake bot should not be used to call telegram")
-
-    def __hash__(self) -> int:
-        return 1
-
-    def __eq__(self, other) -> bool:
-        return self is other
-
-
 @pytest.mark.asyncio
 async def test_click():
     usecase = Mock()
@@ -141,7 +74,7 @@ async def test_click():
     dp.message.register(start, CommandStart())
 
     message_manager = MockMessageManager()
-    client = BotClient(dp, bot=MyBot(message_manager))
+    client = BotClient(dp, bot=MockBot(message_manager))
     setup_dialogs(dp, message_manager=message_manager)
 
     # start
@@ -166,9 +99,10 @@ async def test_click():
 
     message_manager.assert_answered(callback_id)
     usecase.assert_called()
-    assert message_manager.sent_messages[-2].text == '12312312'
+    assert message_manager.sent_messages[-2].text == 'BOT SEND'
     second_message = message_manager.last_message()
     assert second_message.text == "Next Username"
     assert second_message.reply_markup.inline_keyboard
     user_getter.assert_called_once()
-
+    for msg in message_manager.sent_messages:
+        print(msg.text, msg.message_id)
