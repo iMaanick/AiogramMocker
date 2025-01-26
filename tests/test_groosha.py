@@ -1,5 +1,4 @@
 import asyncio
-import pprint
 
 import pytest
 from aiogram import Dispatcher
@@ -9,11 +8,12 @@ from aiogram_dialog.test_tools.memory_storage import JsonMemoryStorage
 
 from app.mock_bot import MockBot
 from app.mock_message_manager import MockMessageManager
-from tests.test_groosha.handlers import common, ordering_food, test_button
+from app.test_groosha.handlers import test_button
+from app.test_groosha.handlers import ordering_food, common
 
 
 @pytest.mark.asyncio
-async def test_click():
+async def test_groosha():
     dp = Dispatcher(
         storage=JsonMemoryStorage(),
     )

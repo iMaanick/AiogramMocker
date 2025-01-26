@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove
 
-from tests.test_groosha.keyboards.simple_row import make_row_keyboard
+from app.test_groosha.keyboards.simple_row import make_row_keyboard
 
 router = Router()
 
