@@ -11,3 +11,7 @@ pytest --cov=app/test_groosha --cov-report=term-missing tests/test_groosha.py
 ```bash
 pytest --cov=app/test_groosha --cov-report=html tests/test_groosha.py
 ```
+
+```bash
+pytest --cov=app/test_di --cov-report=term-missing tests/test_di.py
+```
