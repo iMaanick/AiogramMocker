@@ -2,10 +2,10 @@ import asyncio
 
 import pytest
 from aiogram import Dispatcher
-from aiogram_dialog.test_tools import BotClient
-from aiogram_dialog.test_tools.keyboard import InlineButtonTextLocator
-from aiogram_dialog.test_tools.memory_storage import JsonMemoryStorage
 
+from app.bot_client import BotClient
+from app.keyboard import InlineButtonTextLocator
+from app.memory_storage import JsonMemoryStorage
 from app.mock_bot import MockBot
 from app.mock_message_manager import MockMessageManager
 from app.test_groosha.handlers import test_button
